@@ -1,5 +1,6 @@
 import pygame
 
+from Entidades import Eco
 from GestorEscenas import EscenaBase
 
 
@@ -18,39 +19,62 @@ class EscenaNivel1(EscenaBase):
     COLOR_SOL = (247, 214, 106)
     COLOR_ECO = (224, 238, 228)
     COLOR_ECO_DETALLE = (42, 74, 84)
-    VELOCIDAD_ECO = 220.0
+    COLOR_ARBOL = (92, 57, 33)
+    COLOR_COPA = (45, 112, 60)
 
     def __init__(self) -> None:
-        self.posicion_eco = pygame.Vector2(120, 450)
-        self.tamano_eco = pygame.Vector2(34, 48)
+        self.eco = Eco(120, 450, 34, 48)
+        self.objetos_estaticos = [
+            pygame.Rect(0, 530, 800, 70),
+            pygame.Rect(370, 370, 60, 160),
+        ]
 
     def mover_eco(self, dt: float) -> None:
-        """Mueve a Eco usando segundos transcurridos y las teclas presionadas."""
-        teclas = pygame.key.get_pressed()
-        direccion = pygame.Vector2(
-            teclas[self.TECLA_DERECHA] - teclas[self.TECLA_IZQUIERDA],
-            teclas[self.TECLA_ABAJO] - teclas[self.TECLA_ARRIBA],
-        )
+        """Actualiza velocidades y resuelve el movimiento de Eco."""
+        self.eco.preparar_actualizacion(dt)
+        self.resolver_colisiones_aabb(dt)
 
-        if direccion.length_squared() > 0:
-            direccion = direccion.normalize()
-            self.posicion_eco += direccion * self.VELOCIDAD_ECO * dt
+    def resolver_colisiones_aabb(self, dt: float) -> None:
+        """Resuelve colisiones primero en X y luego en Y para evitar bloqueos."""
+        self.eco.x += self.eco.vx * dt
+        self.eco.sincronizar_hitbox()
+
+        for objeto in self.objetos_estaticos:
+            if self.eco.hitbox.colliderect(objeto):
+                if self.eco.vx > 0:
+                    self.eco.x = objeto.left - self.eco.hitbox.width
+                elif self.eco.vx < 0:
+                    self.eco.x = objeto.right
+                self.eco.vx = 0.0
+                self.eco.sincronizar_hitbox()
+
+        self.eco.y += self.eco.vy * dt
+        self.eco.sincronizar_hitbox()
+
+        for objeto in self.objetos_estaticos:
+            if self.eco.hitbox.colliderect(objeto):
+                if self.eco.vy > 0:
+                    self.eco.y = objeto.top - self.eco.hitbox.height
+                elif self.eco.vy < 0:
+                    self.eco.y = objeto.bottom
+                self.eco.vy = 0.0
+                self.eco.sincronizar_hitbox()
 
     def limitar_posicion_eco(self, pantalla: pygame.Surface) -> None:
         """Mantiene a Eco dentro de los límites visibles del nivel."""
         ancho, alto = pantalla.get_size()
-        margen_suelo = 70
-        self.posicion_eco.x = max(
+        self.eco.x = max(
             0,
-            min(self.posicion_eco.x, ancho - self.tamano_eco.x),
+            min(self.eco.x, ancho - self.eco.hitbox.width),
         )
-        self.posicion_eco.y = max(
+        self.eco.y = max(
             0,
             min(
-                self.posicion_eco.y,
-                alto - margen_suelo - self.tamano_eco.y,
+                self.eco.y,
+                alto - self.eco.hitbox.height,
             ),
         )
+        self.eco.sincronizar_hitbox()
 
     def actualizar(self, dt: float) -> None:
         """Actualiza el movimiento de Eco en el nivel."""
@@ -87,13 +111,11 @@ class EscenaNivel1(EscenaBase):
             self.COLOR_SUELO,
             (0, alto - 70, ancho, 70),
         )
+        _, arbol = self.objetos_estaticos
+        pygame.draw.rect(pantalla, self.COLOR_ARBOL, arbol)
+        pygame.draw.circle(pantalla, self.COLOR_COPA, (arbol.centerx, arbol.top), 58)
         self.limitar_posicion_eco(pantalla)
-        cuerpo_eco = pygame.Rect(
-            round(self.posicion_eco.x),
-            round(self.posicion_eco.y),
-            round(self.tamano_eco.x),
-            round(self.tamano_eco.y),
-        )
+        cuerpo_eco = self.eco.hitbox
         pygame.draw.rect(pantalla, self.COLOR_ECO, cuerpo_eco)
         pygame.draw.rect(pantalla, self.COLOR_ECO_DETALLE, cuerpo_eco, 3)
         pygame.draw.rect(
