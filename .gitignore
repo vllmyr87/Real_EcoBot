@@ -1,2 +1,20 @@
 __pycache__/
 *.py[cod]
+
+# Entornos virtuales y configuracion local
+.venv/
+venv/
+env/
+.env
+
+# Archivos temporales del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Caches y resultados de herramientas Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.log
