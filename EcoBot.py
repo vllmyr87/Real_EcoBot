@@ -3,6 +3,7 @@ import pygame
 from EscenaMenu import EscenaMenu
 from EscenaNivel1 import EscenaNivel1
 from GestorEscenas import GestorEscenas
+from Interfaz import Gestor_UI
 
 
 ANCHO_PANTALLA = 800
@@ -17,12 +18,13 @@ def ejecutar_juego() -> None:
     pantalla = pygame.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA))
     pygame.display.set_caption("EcoBot")
     reloj = pygame.time.Clock()
+    gestor_ui = Gestor_UI()
 
     gestor_escenas = GestorEscenas()
     escena_menu = EscenaMenu(gestor_escenas)
     escena_nivel_1 = EscenaNivel1()
     gestor_escenas.registrar_escena("menu", escena_menu)
-    gestor_escenas.registrar_escena("nivel_1", escena_nivel_1)
+    gestor_escenas.registrar_escena("NIVEL_1", escena_nivel_1)
     gestor_escenas.cambiar_escena("menu")
 
     ejecutando = True
@@ -37,6 +39,12 @@ def ejecutar_juego() -> None:
 
         gestor_escenas.actualizar(dt)
         gestor_escenas.dibujar(pantalla)
+        if gestor_escenas.escena_actual is escena_nivel_1:
+            gestor_ui.dibujar_barra_salud(
+                pantalla,
+                escena_nivel_1.eco.salud.vida,
+                escena_nivel_1.eco.VIDA_INICIAL,
+            )
         pygame.display.flip()
 
     getattr(pygame, "quit")()
