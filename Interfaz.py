@@ -1,14 +1,16 @@
 import pygame
 
+import Configuracion_UI as config_ui
+
 
 class Boton_UI:
     """Botón interactivo con detección de clic mediante límites AABB."""
 
-    COLOR_NORMAL = (66, 145, 91)
-    COLOR_HOVER = (82, 177, 103)
-    COLOR_BORDE = (226, 232, 212)
-    COLOR_TEXTO = (245, 245, 230)
-    FACTOR_HOVER = 1.05
+    COLOR_NORMAL = config_ui.COLOR_BOTON_NORMAL
+    COLOR_HOVER = config_ui.COLOR_BOTON_HOVER
+    COLOR_BORDE = config_ui.COLOR_BORDE
+    COLOR_TEXTO = config_ui.COLOR_TEXTO
+    FACTOR_HOVER = config_ui.FACTOR_HOVER_BOTON
 
     def __init__(self, x: int, y: int, ancho: int, alto: int, texto: str) -> None:
         if ancho <= 0 or alto <= 0:
@@ -17,7 +19,10 @@ class Boton_UI:
         self.rect = pygame.Rect(x, y, ancho, alto)
         self.rect_visual = self.rect.copy()
         self.texto = texto
-        self.fuente = pygame.font.Font(None, 32)
+        self.fuente = pygame.font.Font(
+            config_ui.FUENTE_BASE,
+            config_ui.TAMANO_FUENTE_BOTON,
+        )
         self.mouse_sobre = False
 
     def actualizar(self, posicion_mouse: tuple[int, int]) -> None:
@@ -42,13 +47,18 @@ class Boton_UI:
     def dibujar(self, pantalla: pygame.Surface) -> None:
         """Dibuja el botón usando el estado hover actualizado."""
         color = self.COLOR_HOVER if self.mouse_sobre else self.COLOR_NORMAL
-        pygame.draw.rect(pantalla, color, self.rect_visual, border_radius=8)
+        pygame.draw.rect(
+            pantalla,
+            color,
+            self.rect_visual,
+            border_radius=config_ui.RADIO_BORDE_BOTON,
+        )
         pygame.draw.rect(
             pantalla,
             self.COLOR_BORDE,
             self.rect_visual,
             width=2,
-            border_radius=8,
+            border_radius=config_ui.RADIO_BORDE_BOTON,
         )
         superficie_texto = self.fuente.render(self.texto, True, self.COLOR_TEXTO)
         x_texto = (
@@ -67,19 +77,22 @@ class Boton_UI:
 class Gestor_UI:
     """Dibuja la interfaz de juego superpuesta a la escena activa."""
 
-    ANCHO_BARRA = 220
-    ALTO_BARRA = 16
-    POSICION = (20, 20)
-    COLOR_PANEL = (30, 43, 39)
-    COLOR_FONDO_BARRA = (67, 77, 69)
-    COLOR_BORDE = (226, 232, 212)
-    COLOR_SALUD_ALTA = (82, 177, 103)
-    COLOR_SALUD_MEDIA = (226, 183, 75)
-    COLOR_SALUD_BAJA = (210, 83, 70)
-    COLOR_TEXTO = (245, 245, 230)
+    ANCHO_BARRA = config_ui.ANCHO_BARRA_SALUD
+    ALTO_BARRA = config_ui.ALTO_BARRA_SALUD
+    POSICION = config_ui.POSICION_BARRA_SALUD
+    COLOR_PANEL = config_ui.COLOR_PANEL_SALUD
+    COLOR_FONDO_BARRA = config_ui.COLOR_FONDO_BARRA_SALUD
+    COLOR_BORDE = config_ui.COLOR_BORDE
+    COLOR_SALUD_ALTA = config_ui.COLOR_SALUD_ALTA
+    COLOR_SALUD_MEDIA = config_ui.COLOR_SALUD_MEDIA
+    COLOR_SALUD_BAJA = config_ui.COLOR_SALUD_BAJA
+    COLOR_TEXTO = config_ui.COLOR_TEXTO
 
     def __init__(self) -> None:
-        self.fuente = pygame.font.Font(None, 22)
+        self.fuente = pygame.font.Font(
+            config_ui.FUENTE_BASE,
+            config_ui.TAMANO_FUENTE_BARRA_SALUD,
+        )
 
     def dibujar_barra_salud(
         self,
@@ -95,12 +108,24 @@ class Gestor_UI:
         ancho_interior = self.ANCHO_BARRA - 2
         ancho_salud = int((salud_visible / salud_maxima) * ancho_interior)
         x, y = self.POSICION
+        desplazamiento_x, desplazamiento_y = config_ui.DESPLAZAMIENTO_BARRA_SALUD
+        relleno_x, relleno_y = config_ui.DESPLAZAMIENTO_RELLENO_SALUD
+        texto_x, texto_y = config_ui.DESPLAZAMIENTO_TEXTO_SALUD
 
-        pygame.draw.rect(pantalla, self.COLOR_PANEL, (x, y, 252, 54))
+        pygame.draw.rect(
+            pantalla,
+            self.COLOR_PANEL,
+            (x, y, config_ui.ANCHO_PANEL_SALUD, config_ui.ALTO_PANEL_SALUD),
+        )
         pygame.draw.rect(
             pantalla,
             self.COLOR_FONDO_BARRA,
-            (x + 12, y + 27, self.ANCHO_BARRA, self.ALTO_BARRA),
+            (
+                x + desplazamiento_x,
+                y + desplazamiento_y,
+                self.ANCHO_BARRA,
+                self.ALTO_BARRA,
+            ),
         )
 
         if salud_visible > salud_maxima * 0.6:
@@ -113,12 +138,22 @@ class Gestor_UI:
         pygame.draw.rect(
             pantalla,
             color_salud,
-            (x + 13, y + 28, ancho_salud, self.ALTO_BARRA - 2),
+            (
+                x + desplazamiento_x + relleno_x,
+                y + desplazamiento_y + relleno_y,
+                ancho_salud,
+                self.ALTO_BARRA - 2,
+            ),
         )
         pygame.draw.rect(
             pantalla,
             self.COLOR_BORDE,
-            (x + 12, y + 27, self.ANCHO_BARRA, self.ALTO_BARRA),
+            (
+                x + desplazamiento_x,
+                y + desplazamiento_y,
+                self.ANCHO_BARRA,
+                self.ALTO_BARRA,
+            ),
             1,
         )
 
@@ -127,4 +162,4 @@ class Gestor_UI:
             True,
             self.COLOR_TEXTO,
         )
-        pantalla.blit(texto, (x + 12, y + 7))
+        pantalla.blit(texto, (x + texto_x, y + texto_y))

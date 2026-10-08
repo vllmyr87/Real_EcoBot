@@ -157,6 +157,7 @@ class Enemigo(Dron):
     DURACION_ATAQUE = 0.18
     ANCHO_ATAQUE = 30
     COOLDOWN_ATAQUE = 2.0
+    VELOCIDAD_CAIDA = 360.0
 
     def __init__(
         self,
@@ -176,6 +177,9 @@ class Enemigo(Dron):
         self.attackbox: pygame.Rect | None = None
         self.tiempo_ataque = 0.0
         self.cooldown_ataque = 0.0
+        self.cayendo = False
+        self.destruido = False
+        self.tiempo_caida = 0.0
 
         # Cada estado conoce únicamente su comportamiento; actualizar solo lo despacha.
         self.comportamientos = {
@@ -207,6 +211,15 @@ class Enemigo(Dron):
             raise ValueError("Las dimensiones de la pantalla deben ser positivas")
 
         self.limites_pantalla = (ancho, alto)
+
+    def iniciar_caida(self) -> None:
+        """Desactiva el combate y comienza la caída de derrota del enemigo."""
+        if self.cayendo or self.destruido:
+            return
+
+        self.cayendo = True
+        self.attackbox = None
+        self.cooldown_ataque = 0.0
 
     def limitar_a_pantalla(self) -> None:
         """Mantiene el hitbox dentro de la pantalla y corrige su dirección."""
@@ -307,6 +320,26 @@ class Enemigo(Dron):
         """Ejecuta exclusivamente el comportamiento asociado al estado actual."""
         if dt < 0:
             raise ValueError("Delta Time no puede ser negativo")
+
+        if self.destruido:
+            return
+
+        if self.cayendo:
+            siguiente_y = self.y + self.VELOCIDAD_CAIDA * dt
+            self.tiempo_caida += dt
+
+            if (
+                self.limites_pantalla is not None
+                and siguiente_y + self.hitbox.height / 2 >= self.limites_pantalla[1]
+            ):
+                self.y = self.limites_pantalla[1] - self.hitbox.height / 2
+                self.sincronizar_hitbox()
+                self.destruido = True
+                return
+
+            self.y = siguiente_y
+            self.sincronizar_hitbox()
+            return
 
         self.cooldown_ataque = max(0.0, self.cooldown_ataque - dt)
         self.comportamientos[self.estado_actual](dt)
