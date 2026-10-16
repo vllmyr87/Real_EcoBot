@@ -55,6 +55,7 @@ class EscenaNivel1(EscenaBase):
         (100, 430),
     )
     RUTA_AUDIO = Path(__file__).with_name("sound")
+    RUTA_MUSICA = GestorAudio.RUTA_MUSICA_NIVEL_1
     RUTA_SFX_RECICLAJE = RUTA_AUDIO / "sonido_reciclaje_flor_exito.wav"
     RUTA_SFX_DESTRUCCION = RUTA_AUDIO / "sonido_dron_destruyendose.wav"
 

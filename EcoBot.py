@@ -40,6 +40,13 @@ def ejecutar_juego() -> None:
             else:
                 gestor_escenas.procesar_evento(evento)
 
+        if gestor_escenas.escena_actual is escena_nivel_1:
+            escena_nivel_1.gestor_audio.reproducir_musica(
+                escena_nivel_1.RUTA_MUSICA
+            )
+        else:
+            escena_nivel_1.gestor_audio.detener_musica()
+
         hitstop_activo = tiempo_hitstop > 0
         if hitstop_activo:
             tiempo_hitstop = max(0.0, tiempo_hitstop - dt)
@@ -77,4 +84,3 @@ def ejecutar_juego() -> None:
 
 if __name__ == "__main__":
     ejecutar_juego()
-
